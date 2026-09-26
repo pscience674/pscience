@@ -1,0 +1,62 @@
+TASK: Predict the corpus_ids of papers that the target paper will cite as KEY REFERENCES (highly influential references, not all references).
+
+CAUSAL CONSTRAINT — IMPORTANT: This is a forecasting task. As of the prediction date, the target paper has NOT been written yet. You do NOT have access to the target's title, abstract, or content — only the **identities of its authors** and the **prediction date**. You must infer the likely reference set from the AUTHOR PUBLICATION HISTORY and the broader pre-cutoff corpus.
+
+KEY INSIGHT — TWO PROVEN SIGNALS:
+  (a) Scientists cite their own prior references repeatedly. The strongest single signal is the union of papers the target authors have already cited as key references in their past publications. This "self-citation seed" is typically a few hundred papers and contains a disproportionate share of the actual key references.
+  (b) When semantic similarity needs to be assessed, you must work from ACTUAL author paper text — titles and abstracts — not from a lossy topical summary. Pass the real text into your sub-LLM scoring prompts.
+
+DATA AVAILABLE IN YOUR REPL — this is the COMPLETE pre-cutoff corpus H^{{<t_p}}:
+  - `target_authors`: list of author_id strings (the {n_authors} authors of the upcoming target paper).
+  - `target_date`: "{target_date}" — the date of the upcoming target paper.
+  - `candidates`: list of every paper in the corpus with `date < target_date`. Each:
+      {{"corpus_id": str, "title": str, "abstract": str, "date": str, "author_ids": [str], "author_names": [str], "categories": [str]}}.
+  - `corpus_by_id`: dict mapping corpus_id -> the candidate record above (fast random access).
+  - `author_history`: dict mapping target_author_id → list of that author's past paper records, each with key_reference_corpus_ids resolved:
+      {{"corpus_id": str, "title": str, "abstract": str, "date": "YYYY-MM-DD", "categories": [str], "key_reference_corpus_ids": [str]}}
+  - `pubs_by_author`: dict mapping ANY author_id (not just target's) → list of their corpus_ids in `candidates`. Use this to look up other authors' publication histories on demand.
+
+WORKFLOW (you MUST execute repl blocks for each step before emitting FINAL_VAR):
+
+  Step 1. Inspect: print `target_authors`, `target_date`, `len(candidates)`, `len(pubs_by_author)`, and a few of each target author's most recent publications (titles + dates).
+
+  Step 2. Build the SEED set — corpus_ids the target authors have already cited as key references:
+      seed_ids = set()
+      for aid in target_authors:
+          for pub in author_history.get(aid, []):
+              seed_ids.update(pub["key_reference_corpus_ids"])
+      Restrict seed_ids to keys present in corpus_by_id. This seed represents the authors' established citation neighborhood and is the strongest single signal.
+
+  Step 3. Build a BROADER topical net to catch papers the authors haven't cited before but might now. Use lexical/n-gram overlap between `candidates` and the authors' recent papers' titles+abstracts. Take the top ~2000-3000.
+
+  Step 4. SCORE the union (seed ∪ topical) using `llm_query_batched(...)` in chunks of ~30 candidates per call. CRITICAL: each sub-LLM prompt MUST include the ACTUAL TITLE+ABSTRACT of the target authors' 3-5 most recent papers (real text, not a summary). Don't show any target text — there is none.
+
+  Step 5. Combine signals. For each candidate, final_score = sub_llm_score + (0.5 if corpus_id in seed_ids else 0.0). The seed boost is intentionally large because the self-citation prior is empirically the strongest. Sort by final_score descending, take top {top_n}. Assign to `predictions`. Print it.
+
+  Step 6. On the NEXT response, emit `FINAL_VAR(predictions)`.
+
+EXAMPLE first repl block:
+```repl
+print("Target authors:", target_authors)
+print("Target date:", target_date)
+print("Candidate pool size:", len(candidates))
+print("Authors indexed:", len(pubs_by_author))
+seed_ids = set()
+for aid in target_authors:
+    pubs = author_history.get(aid, [])
+    print(f"  Author {{aid}}: {{len(pubs)}} prior pubs")
+    for pub in pubs[-3:]:
+        print(f"    [{{pub['date']}}] {{pub['title']}}")
+        seed_ids.update(pub["key_reference_corpus_ids"])
+seed_ids &= set(corpus_by_id.keys())
+print(f"Seed set (corpus_ids authors have cited as key references): {{len(seed_ids)}}")
+```
+
+Hard rules:
+- `predictions` must be a Python list of corpus_id strings, ranked from MOST to LEAST likely.
+- Only include corpus_ids that exist in `corpus_by_id`. Validate before assigning.
+- AIM for exactly {top_n} entries. Recall matters: even low-confidence guesses at the tail are valuable.
+- Never emit FINAL_VAR(predictions) without `predictions` having been assigned to a non-empty Python list in a previous repl turn.
+- Do NOT apply hard date cutoffs — the pool is already past-only.
+- The sub-LLM scoring prompts MUST include the ACTUAL author paper titles and abstracts as text, not a compressed topic summary. Lossy summaries are forbidden.
+- Do NOT invent or reference any text from the target paper itself. There is none. Only `target_authors` and `target_date` describe the target.

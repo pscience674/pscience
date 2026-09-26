@@ -1,0 +1,34 @@
+TASK: Predict the corpus_ids of papers that the target paper below cites as KEY REFERENCES (highly influential references, not all references).
+
+DATA: The candidate pool is preloaded as a Python list named `candidates` in your REPL. Every entry's date is STRICTLY before the target paper's date — the pool already excludes future papers, so you do NOT need to apply any date cutoff yourself. Each entry is a dict:
+  {{"corpus_id": str, "title": str, "abstract": str, "date": "YYYY-MM-DD", "author_names": [str], "categories": [str]}}
+There are likely hundreds of thousands of entries — far too many to inspect individually. You MUST do programmatic filtering before scoring. Run `len(candidates)` first.
+
+WORKFLOW (you MUST execute repl blocks for each step before emitting FINAL_VAR):
+  Step 1. Inspect: print `len(candidates)`, the date range, and a few sample entries.
+  Step 2. Build a TOPICAL filter from the target's title+abstract (e.g. unigrams/bigrams, key terms, exact phrases). DO NOT apply any date filter — older foundational papers (e.g. seminal methods from years or decades ago) are commonly cited as key references and must remain eligible. Shrink the pool to a few thousand most plausible candidates by lexical/topical overlap alone.
+  Step 3. Use `llm_query_batched(...)` to score the filtered candidates in chunks of ~30 entries per call. Ask the sub-LLM to return JSON like {{"corpus_id": float_score}} for each candidate's likelihood of being a key reference of the target paper.
+  Step 4. Aggregate scores, sort descending, take the top {top_n}. Assign the ranked list of corpus_ids to a variable named `predictions` (a Python list of strings). Print it. Then on the NEXT response emit `FINAL_VAR(predictions)`.
+
+EXAMPLE first repl block:
+```repl
+import re
+print("Pool size:", len(candidates))
+print("Pool date range:", min(c["date"] for c in candidates), "to", max(c["date"] for c in candidates))
+print("Target date:", "{date}")
+print("Sample entry:", candidates[0])
+```
+
+Hard rules:
+- `predictions` must be a Python list of corpus_id strings, ranked from MOST to LEAST likely.
+- Only include corpus_ids that exist in `candidates`. Validate before assigning.
+- AIM for exactly {top_n} entries. Recall matters: even low-confidence guesses at the tail of the ranking are valuable. Do NOT emit a list shorter than {top_n} unless your filter genuinely produced fewer eligible candidates.
+- Never emit FINAL_VAR(predictions) without `predictions` having been assigned to a non-empty Python list in a previous repl turn. If your scoring fails, fall back to ranking by lexical-overlap score alone before emitting.
+- Do NOT apply hard date cutoffs (e.g. "within last 3 years") — the pool is already past-only and the relevant filter is topical, not temporal.
+
+TARGET PAPER:
+Title: {title}
+Abstract: {abstract}
+Date: {date}
+Authors: {author_names}
+Categories: {categories}

@@ -1,0 +1,47 @@
+TASK: Predict the corpus_ids of papers that the target paper will cite as KEY REFERENCES (highly influential references, not all references).
+
+CAUSAL CONSTRAINT — IMPORTANT: This is a forecasting task. As of the prediction date, the target paper has NOT been written yet. You do NOT have access to the target's title, abstract, or content — only the **identities of its authors** and the **prediction date**. You must infer the likely topic and reference set from the AUTHOR PUBLICATION HISTORY alone.
+
+DATA AVAILABLE IN YOUR REPL:
+  - `target_authors`: list of author_id strings (the {n_authors} authors of the upcoming target paper).
+  - `target_date`: "{target_date}" — the date of the upcoming target paper. Everything must be inferred as-of this date.
+  - `author_history`: dict mapping author_id → list of paper records, one per past publication of that author. Each record:
+      {{"corpus_id": str, "title": str, "abstract": str, "date": "YYYY-MM-DD", "categories": [str], "key_reference_corpus_ids": [str]}}
+    These are CAUSALLY AVAILABLE — papers the target authors had already published before `target_date`.
+  - `candidates`: list of every paper in the corpus with `date < target_date` (the universe of papers that could be cited). Each entry:
+      {{"corpus_id": str, "title": str, "abstract": str, "date": "YYYY-MM-DD", "author_names": [str], "categories": [str]}}
+    Hundreds of thousands of entries — use programmatic filtering, do not inspect by eye.
+
+WORKFLOW (you MUST execute repl blocks for each step before emitting FINAL_VAR):
+  Step 1. Inspect the inputs:
+      - print `target_authors`, `target_date`, `len(candidates)`
+      - print how many publications each target author has, and a few of their titles, dates, and categories
+      - look at recent (most recent year or two) titles per author to get a sense of their current research direction.
+
+  Step 2. Build a topical profile of the AUTHORS' work — what do they research, what methods do they use, what subfields do they publish in. Also collect the corpus_ids that those past publications already CITED (from the `key_reference_corpus_ids` field). These already-cited refs are the strongest signal: scientists tend to cite their own prior references repeatedly.
+
+  Step 3. Filter `candidates` to a few thousand most plausible candidates by combining (a) lexical/topical overlap with the authors' past titles+abstracts and (b) the union of corpus_ids the authors have previously cited (the latter, restricted to `candidates`, gives you a strong "self-citation/community" prior).
+
+  Step 4. Use `llm_query_batched(...)` to score the filtered candidates in chunks of ~30 entries per call. Provide the sub-LLM with a SUMMARY of the authors' research interests (built from their past titles/abstracts), and ask it to score each candidate's likelihood of being a key reference of these authors' next paper. Do NOT show the sub-LLM any target text — there is none.
+
+  Step 5. Aggregate scores, sort descending, take the top {top_n}. Assign the ranked list to `predictions` (a Python list of corpus_id strings). Print it. Then on the NEXT response emit `FINAL_VAR(predictions)`.
+
+EXAMPLE first repl block:
+```repl
+print("Target authors:", target_authors)
+print("Target date:", target_date)
+print("Candidate pool size:", len(candidates))
+for aid in target_authors:
+    pubs = author_history.get(aid, [])
+    print(f"  Author {{aid}}: {{len(pubs)}} prior pubs")
+    for p in pubs[-3:]:  # 3 most recent
+        print(f"    [{{p['date']}}] {{p['title']}}")
+```
+
+Hard rules:
+- `predictions` must be a Python list of corpus_id strings, ranked from MOST to LEAST likely.
+- Only include corpus_ids that exist in `candidates`. Validate before assigning.
+- AIM for exactly {top_n} entries. Recall matters: even low-confidence guesses at the tail are valuable.
+- Never emit FINAL_VAR(predictions) without `predictions` having been assigned to a non-empty Python list in a previous repl turn.
+- Do NOT apply hard date cutoffs — the pool is already past-only and key references can be of any age.
+- Do NOT invent or reference any text from the target paper itself. There is none. Only `target_authors` and `target_date` describe the target.

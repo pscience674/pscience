@@ -1,0 +1,66 @@
+TASK: Predict the author_ids of researchers who will co-author the SEED author's next paper.
+
+CAUSAL CONSTRAINT — IMPORTANT: This is a forecasting task. The seed author is about to write a new paper as of `target_date`. You do NOT have access to that future paper's title, abstract, or co-author list — only the seed's identity and prediction date. You must infer the likely co-authors from the COMPLETE pre-cutoff corpus you've been given.
+
+DATA AVAILABLE IN YOUR REPL:
+  - `seed_author_id`: "{seed_author_id}" — the lead author of the upcoming target paper.
+  - `target_date`: "{target_date}" — the publication date of the upcoming target paper.
+  - `corpus`: list of {n_corpus} paper records — every paper in the corpus with date < target_date. This is the complete pre-cutoff corpus H^{{<t_p}}. Each:
+      {{"corpus_id": str, "title": str, "abstract": str, "date": "YYYY-MM-DD", "categories": [str], "author_ids": [str], "author_names": [str]}}
+  - `corpus_by_id`: dict mapping corpus_id -> the paper record above (fast random access).
+  - `pubs_by_author`: dict mapping author_id -> list of corpus_ids (every author's complete publication history within the corpus). {n_authors} authors indexed.
+  - `seed_history`: list of the seed's most recent past publications (a focal subset of the corpus, with coauthor IDs spelled out so you don't have to dereference). Each:
+      {{"corpus_id": str, "title": str, "abstract": str, "date": str, "categories": [str], "coauthors": [{{"author_id": str, "name": str}}]}}
+
+WORKFLOW (you MUST execute repl blocks for each step before emitting FINAL_VAR):
+
+  Step 1. Inspect:
+      - print `seed_author_id`, `target_date`, len(corpus), len(pubs_by_author), len(seed_history)
+      - print the most recent 3-5 entries of seed_history (titles, dates, coauthor names) — establishes seed's current direction.
+      - check `len(pubs_by_author.get(seed_author_id, []))` — sanity check on the seed's own coverage.
+
+  Step 2. Build the seed's collaboration graph from `seed_history`:
+      collab_freq = {{}}
+      for paper in seed_history:
+          for c in paper['coauthors']:
+              collab_freq[c['author_id']] = collab_freq.get(c['author_id'], 0) + 1
+      sorted_collabs = sorted(collab_freq.items(), key=lambda kv: -kv[1])
+      The top entries here are the strongest single signal — repeat collaborators are highly likely to recur.
+
+  Step 3. Expand to 2-hop collaborators using `pubs_by_author`. For each top-N 1-hop collaborator l1 (say N=100), pull `pubs_by_author[l1]`, look up those papers in `corpus_by_id`, and accumulate their coauthors into a 2-hop frequency dict (weighted lower than 1-hop). Skip the seed and the 1-hop authors themselves when collecting the 2-hop set.
+
+  Step 4. Score candidates using a combination of:
+      - 1-hop frequency (strongest)
+      - 2-hop frequency (weaker but recovers occasional collaborators)
+      - Recency: was the candidate active near `target_date`? (use `pubs_by_author[aid]` and look up the most recent date in `corpus_by_id`)
+      - Topic overlap with seed_history's titles/abstracts (lexical overlap on n-grams or pass through `llm_query_batched`)
+
+  Step 5. Optionally use `llm_query_batched(...)` to re-rank the top-200 candidates by feeding the seed's recent paper titles+abstracts + each candidate's recent paper titles to the sub-LLM. Don't show any target text — there is none.
+
+  Step 6. Rank descending, take the top {top_n}. Assign to `predictions` as a Python list of author_id strings. Print it. Then on the NEXT response emit `FINAL_VAR(predictions)`.
+
+EXAMPLE first repl block:
+```repl
+print("Seed:", seed_author_id, "Date:", target_date)
+print("Corpus size:", len(corpus), "Authors:", len(pubs_by_author))
+print("Seed pubs in corpus:", len(pubs_by_author.get(seed_author_id, [])))
+print("\\nMost recent seed papers:")
+for p in seed_history[-5:]:
+    coauth = ", ".join(c['name'] for c in p['coauthors'][:5])
+    print(f"  [{{p['date']}}] {{p['title'][:80]}} — coauth: {{coauth}}")
+collab_freq = {{}}
+for paper in seed_history:
+    for c in paper['coauthors']:
+        collab_freq[c['author_id']] = collab_freq.get(c['author_id'], 0) + 1
+print("\\nTop-10 1-hop collaborators by raw frequency:")
+for aid, f in sorted(collab_freq.items(), key=lambda kv: -kv[1])[:10]:
+    print(f"  {{aid}}  freq={{f}}  pubs={{len(pubs_by_author.get(aid, []))}}")
+```
+
+Hard rules:
+- `predictions` must be a Python list of author_id strings, ranked from MOST to LEAST likely.
+- Only include author_ids that appear as keys in `pubs_by_author` (i.e., authors with ≥1 pre-cutoff publication). Validate before assigning.
+- Do NOT include the seed itself.
+- AIM for exactly {top_n} entries. Recall matters — even low-confidence guesses at the tail are valuable.
+- Never emit FINAL_VAR(predictions) without `predictions` being assigned to a non-empty Python list in a prior repl turn.
+- Do NOT invent or reference any text from the target paper. There is none. Only the seed_author_id and target_date describe it.

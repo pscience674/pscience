@@ -1,0 +1,196 @@
+Retrieval-augmented generation (RAG) for knowledge-intensive question answering
+Multimodal retrieval-augmented generation
+Retrieval-augmented code generation
+Long-context language modeling and length extrapolation
+Long-context retrieval and needle-in-a-haystack evaluation
+Mixture-of-Experts (MoE) architectures for efficient LLM scaling
+Speculative decoding for accelerated LLM inference
+Direct Preference Optimization (DPO) and preference-based LLM alignment
+Reinforcement Learning from Human Feedback (RLHF) reward modeling
+Reinforcement Learning from AI Feedback (RLAIF)
+Constitutional AI and self-critique for harmlessness
+Reward hacking and specification gaming in RLHF
+Process reward models for step-level supervision
+Preference data collection and annotation strategies
+Chain-of-thought prompting for multi-step reasoning
+Tree-of-Thoughts and graph-of-thoughts reasoning frameworks
+Self-consistency decoding for reasoning tasks
+Self-refinement and iterative LLM output improvement
+Chain-of-verification for factual accuracy
+Chain-of-thought distillation into smaller models
+LLM-based autonomous agents and tool use
+Multi-agent LLM collaboration and debate
+Function calling and API tool integration in LLMs
+Agentic workflows for software engineering tasks
+Parameter-efficient fine-tuning with LoRA and variants
+QLoRA and quantized low-rank adaptation
+Post-training quantization for LLMs (GPTQ, AWQ)
+Mixed-precision and low-bit neural network inference
+Knowledge distillation from large to small language models
+Instruction tuning with synthetic instruction datasets
+Self-instruct and self-generated training data
+Instruction-following evaluation benchmarks
+In-context learning mechanisms and analysis
+Prompt injection and jailbreak attacks on LLMs
+LLM red-teaming and adversarial robustness evaluation
+Safety alignment and refusal behavior in LLMs
+Hallucination detection and mitigation in LLMs
+Factuality and faithfulness evaluation of generated text
+Watermarking of LLM-generated text
+Machine-generated text detection
+LLM-as-a-judge for automatic evaluation
+Data contamination and benchmark leakage in LLM evaluation
+Multimodal large language models (vision-language)
+Visual instruction tuning (LLaVA-style models)
+Video understanding with multimodal LLMs
+Document understanding and visual question answering
+Chart, table, and diagram reasoning in vision-language models
+Grounding and referring expression comprehension
+Open-vocabulary object detection
+Open-vocabulary semantic segmentation
+Segment Anything and promptable segmentation
+Text-to-image diffusion model fine-tuning
+Latent diffusion models for high-resolution synthesis
+Diffusion model guidance and classifier-free guidance
+Consistency models for fast image generation
+Rectified flow and flow matching generative models
+Text-to-video generation with diffusion models
+Video generation consistency and temporal coherence
+Image editing with diffusion models
+Subject-driven and personalized image generation (DreamBooth-style)
+ControlNet and conditional image generation control
+Concept erasure and unlearning in diffusion models
+Image restoration, super-resolution, and denoising with generative priors
+Neural image and video compression
+Neural Radiance Fields (NeRF) for novel view synthesis
+3D Gaussian Splatting for real-time rendering
+Text-to-3D generation with score distillation
+Single-image 3D reconstruction
+Diffusion models for 3D shape generation
+Human motion generation from text
+Talking-head and audio-driven face animation
+Pose estimation and human mesh recovery
+Monocular depth estimation foundation models
+Self-supervised visual representation learning
+Masked image modeling for pretraining
+Vision transformer efficiency and token pruning
+CLIP-style contrastive vision-language pretraining
+Zero-shot image classification with foundation models
+Test-time adaptation for distribution shift
+Domain generalization in computer vision
+Continual and lifelong learning without forgetting
+Few-shot learning and meta-learning
+Prompt learning for vision-language models
+Parameter-efficient adaptation of vision transformers
+Neural architecture search for efficient models
+Structured pruning of large neural networks
+Sparse attention mechanisms for transformers
+FlashAttention and IO-aware attention kernels
+State-space models (Mamba) for sequence modeling
+Linear attention and sub-quadratic transformers
+KV-cache compression for efficient inference
+Grouped-query and multi-query attention
+Rotary and relative positional encodings
+Grokking and delayed generalization phenomena
+Mechanistic interpretability of transformer circuits
+Sparse autoencoders for feature disentanglement in LLMs
+Activation steering and representation engineering
+Probing internal representations of language models
+Model editing and knowledge injection in LLMs
+Machine unlearning for privacy compliance
+Membership inference attacks on trained models
+Differential privacy in deep learning training
+Federated learning with heterogeneous clients
+Federated fine-tuning of foundation models
+Backdoor attacks and defenses in neural networks
+Adversarial examples and certified robustness
+Out-of-distribution detection methods
+Uncertainty quantification in deep learning
+Conformal prediction for reliable ML
+Calibration of neural network confidence
+Synthetic data generation for model training
+Data selection and pruning for pretraining
+Curriculum learning for language model pretraining
+Scaling laws and compute-optimal training for language models
+Emergent abilities of large language models
+Code generation with large language models
+Program repair and automated debugging with LLMs
+Code completion and repository-level context
+Unit test generation with language models
+Text-to-SQL semantic parsing
+Mathematical reasoning benchmarks for LLMs
+Automated theorem proving with language models
+Formal verification aided by LLMs
+Tool-augmented mathematical problem solving
+Multilingual large language models
+Low-resource language modeling and translation
+Cross-lingual transfer learning
+Machine translation quality estimation
+Speech recognition with self-supervised models
+Text-to-speech synthesis with neural codecs
+Neural audio codecs and discrete speech tokens
+Speech-to-speech translation
+Music generation with generative models
+Audio-language models for sound understanding
+Voice cloning and speaker adaptation
+Emotion recognition from speech and text
+Dialogue systems and conversational agents
+Task-oriented dialogue state tracking
+Persona-grounded and role-play dialogue
+Long-form and controllable document summarization
+Aspect-based sentiment analysis
+Named entity recognition in specialized domains
+Relation extraction and knowledge graph construction
+Knowledge graph completion and reasoning
+Entity linking and coreference resolution
+Fact verification and claim detection
+Fake news and misinformation detection
+Hate speech and toxicity detection
+Bias and fairness evaluation in language models
+Debiasing techniques for embeddings and text generation
+Explainable AI for model decision transparency
+Feature attribution methods for deep networks
+Counterfactual explanations for classifiers
+Concept-based interpretability methods
+Graph neural networks for molecular property prediction
+Graph transformers for structured data
+Heterogeneous and dynamic graph learning
+Link prediction in large-scale graphs
+Self-supervised graph representation learning
+Geometric deep learning for physical simulation
+Neural operators and physics-informed learning for PDEs
+AI for protein structure prediction and design
+Molecular generation with diffusion models
+Drug-target interaction prediction
+AI for materials discovery
+Weather and climate forecasting with deep learning
+Foundation models for time-series forecasting
+Anomaly detection in time series
+Tabular deep learning and foundation models for tables
+Recommendation systems with large language models
+Sequential and session-based recommendation
+Cold-start recommendation strategies
+Contrastive and self-supervised representation learning
+Offline reinforcement learning
+Model-based reinforcement learning
+Decision transformers and sequence modeling for RL
+World models for embodied agents
+Vision-language-action models for robotics
+Robot learning from demonstrations and imitation with diffusion policies
+Sim-to-real transfer in robotics
+Language-conditioned robotic manipulation
+Embodied AI navigation and LLM planning for embodied tasks
+Autonomous driving perception and planning
+Bird's-eye-view representation for driving
+Multi-object tracking in video
+Action recognition and temporal localization
+Face recognition robustness and anti-spoofing
+Deepfake detection and forensics
+Medical image segmentation with foundation models
+Radiology report generation from images
+Pathology image analysis with deep learning
+Multimodal clinical prediction and EHR modeling with transformers
+Vision-language models for medical VQA
+Efficient on-device inference for edge deployment
+Prompt compression for efficient LLM context
+Structured output and constrained decoding for LLMs
