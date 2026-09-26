@@ -317,7 +317,7 @@ Other available analysis scripts follow the same compute→plot pattern:
 
 ## Building the Dataset from Scratch
 
-Most users should use the released dataset directly (see [Dataset](#dataset)). The scripts below rebuild the corpus with the public Semantic Scholar and arXiv APIs; results may vary slightly from the released version, and public API rate limits make a full rebuild slow.
+The scripts below rebuild the corpus with the Semantic Scholar and arXiv APIs.
 
 To rebuild from scratch, you need:
 - **S2 API key**: Get one at https://www.semanticscholar.org/product/api#api-key and set `export S2_API_KEY=<your_key>`
